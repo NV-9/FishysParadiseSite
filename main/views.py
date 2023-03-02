@@ -1,0 +1,58 @@
+from django.conf import settings
+from django.contrib.auth import authenticate, login
+from django.contrib.auth.decorators import login_required
+from django.http import HttpRequest, HttpResponseRedirect
+from django.shortcuts import render, redirect
+import requests
+from .models import FPUser
+
+
+def home_view(request: HttpRequest):
+    return render(request, 'main/home.html')
+
+@login_required(login_url='/oauth2/login')
+def dashboard_view(request: HttpRequest):
+    return render(request, 'main/dashboard.html')
+
+def discord_login_view(request: HttpRequest):
+    return redirect(settings.AUTH_URL)
+
+def discord_login_redirect_view(request: HttpRequest):
+    code = request.GET.get('code', None)
+    if not code:
+        return HttpResponseRedirect('/')
+    
+    data = {
+        'client_id': settings.CLIENT_ID,
+        'client_secret': settings.CLIENT_SECRET,
+        'grant_type': 'authorization_code',
+        'code': code,
+        'redirect_uri': settings.REDIRECT_URI,
+        'scope': settings.SCOPES
+    }
+    headers = {
+        'Content-Type': 'application/x-www-form-urlencoded',
+    }
+    response = requests.post("https://discord.com/api/oauth2/token", data = data, headers = headers)
+    credentials = response.json()
+    if 'access_token' not in credentials:
+        return None 
+    response = requests.get("https://discord.com/api/v6/users/@me", headers = {'Authorization': 'Bearer ' + credentials['access_token']})
+    
+    fpuser: FPUser = authenticate(request, user_data = response.json())
+    login(request, user = fpuser)
+    return HttpResponseRedirect('../../dashboard')
+
+
+        
+
+
+
+
+
+
+
+
+
+
+
