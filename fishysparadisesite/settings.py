@@ -21,6 +21,7 @@ INSTALLED_APPS = [
 
 AUTHENTICATION_BACKENDS = [
     'main.auth.DiscordAuthenticationBackend',
+    'django.contrib.auth.backends.ModelBackend',
 ]
 
 MIDDLEWARE = [

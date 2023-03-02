@@ -1,10 +1,11 @@
 from django.db import models
 from django.contrib.auth.models import UserManager
+from django.core.exceptions import PermissionDenied
 import random 
 import string
 
 def random_code():
-    return ''.join(random.choice(string.ascii_letters + string.digits + string.punctuation) for _ in range(12))
+    return ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(12))
 
 class FPManager(UserManager): 
     """
@@ -12,17 +13,17 @@ class FPManager(UserManager):
     ----------------------------------
     """
 
-    def create_discord_user(self, user_data):
+    def create_discord_user(self, user):
         new_user: FPUser = self.create(
-            dc_id = user_data['id'],
-            dc_avatar = user_data['avatar'],
-            dc_public_flags = user_data['public_flags'],
-            dc_flags = user_data['flags'],
-            dc_locale = user_data['locale'],
-            dc_mfa_enabled = user_data['mfa_enabled'],
-            dc_username = user_data['username'],
-            dc_discriminator = user_data['discriminator'],
-            email = user_data['email']
+            dc_id = user['id'],
+            dc_avatar = user['avatar'],
+            dc_public_flags = user['public_flags'],
+            dc_flags = user['flags'],
+            dc_locale = user['locale'],
+            dc_mfa_enabled = user['mfa_enabled'],
+            dc_username = user['username'],
+            dc_discriminator = user['discriminator'],
+            email = user['email']
         )
         return new_user
 
@@ -32,8 +33,8 @@ class FPUser(models.Model):
     id = models.BigAutoField(primary_key=True)
     email = models.EmailField()
 
-    mc_id = models.CharField(db_column='uniqueId', max_length = 50, blank = True, default = "")
-    mc_username = models.CharField(max_length = 50, blank = True, default = "")
+    mc_id = models.CharField(db_column='uniqueId', max_length = 50, blank = True, null = True)
+    mc_username = models.CharField(max_length = 50, blank = True, null = True)
 
     dc_id = models.PositiveBigIntegerField()
     dc_username = models.CharField(max_length = 50)
@@ -62,9 +63,36 @@ class FPUser(models.Model):
     @property
     def discord_name(self):
         return f"{self.dc_username}#{self.dc_discriminator}"#
+    
+    @property 
+    def home_coords(self):
+        if all([self.home_x, self.home_y, self.home_z]):
+            return f"{self.home_x}, {self.home_y}, {self.home_z}"
+        return "Not Set"
+    
+    @property 
+    def death_coords(self):
+        if all([self.death_x, self.death_y, self.death_z]):
+            return f"{self.death_x}, {self.death_y}, {self.death_z}"
+        return "Not Set"
 
     def is_authenticated(self):
         return True 
+    
+    def is_active(self):
+        return False
+    
+    def is_staff(self):
+        return False
+    
+    def has_module_perms(self, *args):
+        return False
+    
+    def has_perm(self, *args):
+        raise PermissionDenied 
+    
+    def __str__(self):
+        return self.discord_name
     
     class Meta:
         db_table = 'fpusers'

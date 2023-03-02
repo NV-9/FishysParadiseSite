@@ -1,5 +1,5 @@
 from django.conf import settings
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.http import HttpRequest, HttpResponseRedirect
 from django.shortcuts import render, redirect
@@ -12,7 +12,14 @@ def home_view(request: HttpRequest):
 
 @login_required(login_url='/oauth2/login')
 def dashboard_view(request: HttpRequest):
-    return render(request, 'main/dashboard.html')
+    context = {}
+    if request.user.is_authenticated:
+        if isinstance(request.user, FPUser):
+            context = {
+
+            }
+            return render(request, 'main/dashboard.html', context = context)
+    return HttpResponseRedirect('/admin')
 
 def discord_login_view(request: HttpRequest):
     return redirect(settings.AUTH_URL)
@@ -38,21 +45,14 @@ def discord_login_redirect_view(request: HttpRequest):
     if 'access_token' not in credentials:
         return None 
     response = requests.get("https://discord.com/api/v6/users/@me", headers = {'Authorization': 'Bearer ' + credentials['access_token']})
-    
-    fpuser: FPUser = authenticate(request, user_data = response.json())
+    fpuser: FPUser = authenticate(request, user = response.json())
     login(request, user = fpuser)
     return HttpResponseRedirect('../../dashboard')
 
-
-        
-
-
-
-
-
-
-
-
+def logout_view(request: HttpRequest):
+    if request.user.is_authenticated:
+        logout(request)
+    return HttpResponseRedirect('/')
 
 
 
