@@ -1,0 +1,48 @@
+.card {
+    width: 30rem;
+}
+
+.list-group-item {
+    color: aquamarine; 
+    background-color: black;
+}
+
+.card-header, .card-title {
+    text-align: center;
+}
+
+.card-img-top {
+    height: 300px; 
+    width: 300px; 
+    align-self: center;
+}
+
+.card-body {
+    display: flex; flex-direction: column;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background-image: url('/static/main/assets/img/server-image.png')
+}
+
+#server-card {
+    width: 18rem;
+}
+
+.navbar {
+    background-color: #333;
+    margin-bottom: 80px;
+}
+
+.navbar-brand {
+    font-size: 1.5rem;
+}
+
+.navbar-nav .nav-item {
+    margin-right: 15px;
+}
+
+.access {
+    color: red;
+}
